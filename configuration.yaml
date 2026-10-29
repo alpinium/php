@@ -1,0 +1,771 @@
+extensions:
+  avif:
+    options:
+      - '--with-avif'
+    debian:
+      bookworm:
+        packages:
+          - 'libavif15'
+        dev_packages:
+          - 'libavif-dev'
+      trixie:
+        packages:
+          - 'libavif16'
+        dev_packages:
+          - 'libavif-dev'
+  bcmath:
+    options:
+      - '--enable-bcmath'
+  bz2:
+    options:
+      - '--with-bz2'
+    debian:
+      bookworm:
+        packages:
+          - 'libbz2-1.0'
+        dev_packages:
+          - 'libbz2-dev'
+      trixie:
+        packages:
+          - 'libbz2-1.0'
+        dev_packages:
+          - 'libbz2-dev'
+  calendar:
+    options:
+      - '--enable-calendar'
+  cgi:
+    options:
+      - '--disable-cgi'
+  cli:
+    options:
+      - '--enable-cli'
+  curl:
+    options:
+      - '--with-curl'
+    debian:
+      bookworm:
+        packages:
+          - 'libcurl4'
+        dev_packages:
+          - 'libcurl4-openssl-dev'
+      trixie:
+        packages:
+          - 'libcurl4t64'
+        dev_packages:
+          - 'libcurl4-openssl-dev'
+  dba:
+    options:
+      - '--enable-dba'
+  dom:
+    options:
+      - '--enable-dom'
+  exif:
+    options:
+      - '--enable-exif'
+  fdsetsize:
+    options:
+      - '--enable-fd-setsize=8192'
+  ffi:
+    options:
+      - '--with-ffi'
+    debian:
+      bookworm:
+        packages:
+          - 'libffi8'
+        dev_packages:
+          - 'libffi-dev'
+      trixie:
+        packages:
+          - 'libffi8'
+        dev_packages:
+          - 'libffi-dev'
+  fpm:
+    options:
+      - '--enable-fpm'
+      - '--with-fpm-user=root'
+      - '--with-fpm-group=root'
+  freetype:
+    options:
+      - '--with-freetype'
+    debian:
+      bookworm:
+        packages:
+          - 'libfreetype6'
+        dev_packages:
+          - 'libfreetype-dev'
+      trixie:
+        packages:
+          - 'libfreetype6'
+        dev_packages:
+          - 'libfreetype-dev'
+  ftp:
+    options:
+      - '--enable-ftp'
+  gd:
+    options:
+      - '--enable-gd'
+      - '--enable-gd-jis-conv'
+    debian:
+      bookworm:
+        packages:
+          - 'libpng16-16'
+        dev_packages:
+          - 'libpng-dev'
+      trixie:
+        packages:
+          - 'libpng16-16t64'
+        dev_packages:
+          - 'libpng-dev'
+  gettext:
+    options:
+      - '--with-gettext'
+  gmp:
+    options:
+      - '--with-gmp'
+    debian:
+      bookworm:
+        packages:
+          - 'libgmp10'
+        dev_packages:
+          - 'libgmp-dev'
+      trixie:
+        packages:
+          - 'libgmp10'
+        dev_packages:
+          - 'libgmp-dev'
+  iconv:
+    options:
+      - '--with-iconv'
+  intl:
+    options:
+      - '--enable-intl'
+    debian:
+      bookworm:
+        packages:
+          - 'libicu72'
+        dev_packages:
+          - 'libicu-dev'
+      trixie:
+        packages:
+          - 'libicu76'
+        dev_packages:
+          - 'libicu-dev'
+  jpeg:
+    options:
+      - '--with-jpeg'
+    debian:
+      bookworm:
+        packages:
+          - 'libjpeg62-turbo'
+        dev_packages:
+          - 'libjpeg-dev'
+      trixie:
+        packages:
+          - 'libjpeg62-turbo'
+        dev_packages:
+          - 'libjpeg-dev'
+  ldap:
+    options:
+      - '--with-ldap'
+    debian:
+      bookworm:
+        packages:
+          - 'libldap-2.5-0'
+        dev_packages:
+          - 'libldap-dev'
+      trixie:
+        packages:
+          - 'libldap2'
+        dev_packages:
+          - 'libldap-dev'
+  mbstring:
+    options:
+      - '--enable-mbstring'
+    debian:
+      bookworm:
+        packages:
+          - 'libonig5'
+        dev_packages:
+          - 'libonig-dev'
+      trixie:
+        packages:
+          - 'libonig5'
+        dev_packages:
+          - 'libonig-dev'
+  mysqli:
+    options:
+      - '--with-mysqli'
+  mysqlnd:
+    options:
+      - '--enable-mysqlnd'
+  opcache:
+    options:
+      - '--enable-opcache'
+  openssl:
+    options:
+      - '--with-openssl'
+    debian:
+      bookworm:
+        packages:
+          - 'libssl3'
+        dev_packages:
+          - 'libssl-dev'
+      trixie:
+        packages:
+          - 'libssl3t64'
+        dev_packages:
+          - 'libssl-dev'
+  openssl_argon2:
+    debian:
+      trixie:
+        options:
+          - '--with-openssl-argon2'
+  option_checking:
+    options:
+      - '--enable-option-checking=fatal'
+  password_argon2:
+    debian:
+      trixie:
+        options:
+          - '--with-password-argon2'
+        packages:
+          - 'libargon2-1'
+        dev_packages:
+          - 'libargon2-dev'
+  pcntl:
+    options:
+      - '--enable-pcntl'
+  pdo_mysql:
+    options:
+      - '--with-pdo-mysql'
+  pdo_pgsql:
+    options:
+      - '--with-pdo-pgsql'
+  pdo_sqlite:
+    options:
+      - '--with-pdo-sqlite'
+  pear:
+    options:
+      - '--with-pear'
+  pgsql:
+    options:
+      - '--with-pgsql'
+    debian:
+      bookworm:
+        packages:
+          - 'libpq5'
+        dev_packages:
+          - 'libpq-dev'
+      trixie:
+        packages:
+          - 'libpq5'
+        dev_packages:
+          - 'libpq-dev'
+  phpdbg:
+    options:
+      - '--enable-phpdbg'
+  pic:
+    options:
+      - '--with-pic'
+  re2c_cgoto:
+    options:
+      - '--enable-re2c-cgoto'
+  readline:
+    options:
+      - '--with-readline'
+    debian:
+      bookworm:
+        packages:
+          - 'libreadline8'
+        dev_packages:
+          - 'libreadline-dev'
+      trixie:
+        packages:
+          - 'libreadline8t64'
+        dev_packages:
+          - 'libreadline-dev'
+  shmop:
+    options:
+      - '--enable-shmop'
+  simple_xml:
+    options:
+      - '--enable-simplexml'
+  soap:
+    options:
+      - '--enable-soap'
+  sockets:
+    options:
+      - '--enable-sockets'
+  sodium:
+    options:
+      - '--with-sodium'
+    debian:
+      bookworm:
+        packages:
+          - 'libsodium23'
+        dev_packages:
+          - 'libsodium-dev'
+      trixie:
+        packages:
+          - 'libsodium23'
+        dev_packages:
+          - 'libsodium-dev'
+  sqlite3:
+    options:
+      - '--with-sqlite3'
+    debian:
+      bookworm:
+        packages:
+          - 'libsqlite3-0'
+        dev_packages:
+          - 'libsqlite3-dev'
+      trixie:
+        packages:
+          - 'libsqlite3-0'
+        dev_packages:
+          - 'libsqlite3-dev'
+  sysvmsg:
+    options:
+      - '--enable-sysvmsg'
+  sysvsem:
+    options:
+      - '--enable-sysvsem'
+  sysvshm:
+    options:
+      - '--enable-sysvshm'
+  tidy:
+    options:
+      - '--with-tidy'
+    debian:
+      bookworm:
+        packages:
+          - 'libtidy5deb1'
+        dev_packages:
+          - 'libtidy-dev'
+      trixie:
+        packages:
+          - 'libtidy58'
+        dev_packages:
+          - 'libtidy-dev'
+  webp:
+    options:
+      - '--with-webp'
+    debian:
+      bookworm:
+        packages:
+          - 'libwebp7'
+        dev_packages:
+          - 'libwebp-dev'
+      trixie:
+        packages:
+          - 'libwebp7'
+        dev_packages:
+          - 'libwebp-dev'
+  xml:
+    options:
+      - '--enable-xml'
+      - '--with-libxml'
+    debian:
+      bookworm:
+        packages:
+          - 'libxml2'
+        dev_packages:
+          - 'libxml2-dev'
+      trixie:
+        packages:
+          - 'libxml2'
+        dev_packages:
+          - 'libxml2-dev'
+  xml_reader:
+    options:
+      - '--enable-xmlreader'
+  xml_writer:
+    options:
+      - '--enable-xmlwriter'
+  xpm:
+    options:
+      - '--with-xpm'
+    debian:
+      bookworm:
+        packages:
+          - 'libxpm4'
+        dev_packages:
+          - 'libxpm-dev'
+      trixie:
+        packages:
+          - 'libxpm4'
+        dev_packages:
+          - 'libxpm-dev'
+  xsl:
+    options:
+      - '--with-xsl'
+    debian:
+      bookworm:
+        packages:
+          - 'libxslt1.1'
+        dev_packages:
+          - 'libxslt1-dev'
+      trixie:
+        packages:
+          - 'libxslt1.1'
+        dev_packages:
+          - 'libxslt1-dev'
+  zend_test:
+    options:
+      - '--enable-zend-test'
+  zip:
+    options:
+      - '--with-zip'
+    debian:
+      bookworm:
+        packages:
+          - 'libzip4'
+        dev_packages:
+          - 'libzip-dev'
+      trixie:
+        packages:
+          - 'libzip5'
+        dev_packages:
+          - 'libzip-dev'
+  zlib:
+    options:
+      - '--with-zlib'
+    debian:
+      bookworm:
+        packages:
+          - 'zlib1g'
+        dev_packages:
+          - 'zlib1g-dev'
+      trixie:
+        packages:
+          - 'zlib1g'
+        dev_packages:
+          - 'zlib1g-dev'
+
+php_versions:
+  '8.1':
+    php:
+      version: '8.1.34'
+    debian:
+      - 'bookworm'
+      - 'trixie'
+    extensions:
+      - 'avif'
+      - 'bcmath'
+      - 'bz2'
+      - 'calendar'
+      - 'cgi'
+      - 'cli'
+      - 'curl'
+      - 'dba'
+      - 'dom'
+      - 'exif'
+      - 'fdsetsize'
+      - 'ffi'
+      - 'fpm'
+      - 'freetype'
+      - 'ftp'
+      - 'gd'
+      - 'gettext'
+      - 'gmp'
+      - 'iconv'
+      - 'intl'
+      - 'jpeg'
+      - 'ldap'
+      - 'mbstring'
+      - 'mysqli'
+      - 'mysqlnd'
+      - 'opcache'
+      - 'openssl'
+      - 'option_checking'
+      - 'password_argon2'
+      - 'pcntl'
+      - 'pdo_mysql'
+      - 'pdo_pgsql'
+      - 'pdo_sqlite'
+      - 'pear'
+      - 'pgsql'
+      - 'phpdbg'
+      - 'pic'
+      - 're2c_cgoto'
+      - 'readline'
+      - 'shmop'
+      - 'simple_xml'
+      - 'soap'
+      - 'sockets'
+      - 'sodium'
+      - 'sqlite3'
+      - 'sysvmsg'
+      - 'sysvsem'
+      - 'sysvshm'
+      - 'tidy'
+      - 'webp'
+      - 'xml'
+      - 'xml_reader'
+      - 'xml_writer'
+      - 'xpm'
+      - 'xsl'
+      - 'zend_test'
+      - 'zip'
+      - 'zlib'
+  '8.2':
+    php:
+      version: '8.2.35'
+    debian:
+      - 'bookworm'
+      - 'trixie'
+    extensions:
+      - 'avif'
+      - 'bcmath'
+      - 'bz2'
+      - 'calendar'
+      - 'cgi'
+      - 'cli'
+      - 'curl'
+      - 'dba'
+      - 'dom'
+      - 'exif'
+      - 'fdsetsize'
+      - 'ffi'
+      - 'fpm'
+      - 'freetype'
+      - 'ftp'
+      - 'gd'
+      - 'gettext'
+      - 'gmp'
+      - 'iconv'
+      - 'intl'
+      - 'jpeg'
+      - 'ldap'
+      - 'mbstring'
+      - 'mysqli'
+      - 'mysqlnd'
+      - 'opcache'
+      - 'openssl'
+      - 'option_checking'
+      - 'password_argon2'
+      - 'pcntl'
+      - 'pdo_mysql'
+      - 'pdo_pgsql'
+      - 'pdo_sqlite'
+      - 'pear'
+      - 'pgsql'
+      - 'phpdbg'
+      - 'pic'
+      - 're2c_cgoto'
+      - 'readline'
+      - 'shmop'
+      - 'simple_xml'
+      - 'soap'
+      - 'sockets'
+      - 'sodium'
+      - 'sqlite3'
+      - 'sysvmsg'
+      - 'sysvsem'
+      - 'sysvshm'
+      - 'tidy'
+      - 'webp'
+      - 'xml'
+      - 'xml_reader'
+      - 'xml_writer'
+      - 'xpm'
+      - 'xsl'
+      - 'zend_test'
+      - 'zip'
+      - 'zlib'
+  '8.3':
+    php:
+      version: '8.3.36'
+    debian:
+      - 'bookworm'
+      - 'trixie'
+    extensions:
+      - 'avif'
+      - 'bcmath'
+      - 'bz2'
+      - 'calendar'
+      - 'cgi'
+      - 'cli'
+      - 'curl'
+      - 'dba'
+      - 'dom'
+      - 'exif'
+      - 'fdsetsize'
+      - 'ffi'
+      - 'fpm'
+      - 'freetype'
+      - 'ftp'
+      - 'gd'
+      - 'gettext'
+      - 'gmp'
+      - 'iconv'
+      - 'intl'
+      - 'jpeg'
+      - 'ldap'
+      - 'mbstring'
+      - 'mysqli'
+      - 'mysqlnd'
+      - 'opcache'
+      - 'openssl'
+      - 'option_checking'
+      - 'password_argon2'
+      - 'pcntl'
+      - 'pdo_mysql'
+      - 'pdo_pgsql'
+      - 'pdo_sqlite'
+      - 'pear'
+      - 'pgsql'
+      - 'phpdbg'
+      - 'pic'
+      - 're2c_cgoto'
+      - 'readline'
+      - 'shmop'
+      - 'simple_xml'
+      - 'soap'
+      - 'sockets'
+      - 'sodium'
+      - 'sqlite3'
+      - 'sysvmsg'
+      - 'sysvsem'
+      - 'sysvshm'
+      - 'tidy'
+      - 'webp'
+      - 'xml'
+      - 'xml_reader'
+      - 'xml_writer'
+      - 'xpm'
+      - 'xsl'
+      - 'zend_test'
+      - 'zip'
+      - 'zlib'
+  '8.4':
+    php:
+      version: '8.4.27'
+    debian:
+      - 'bookworm'
+      - 'trixie'
+    extensions:
+      - 'avif'
+      - 'bcmath'
+      - 'bz2'
+      - 'calendar'
+      - 'cgi'
+      - 'cli'
+      - 'curl'
+      - 'dba'
+      - 'dom'
+      - 'exif'
+      - 'fdsetsize'
+      - 'ffi'
+      - 'fpm'
+      - 'freetype'
+      - 'ftp'
+      - 'gd'
+      - 'gettext'
+      - 'gmp'
+      - 'iconv'
+      - 'intl'
+      - 'jpeg'
+      - 'ldap'
+      - 'mbstring'
+      - 'mysqli'
+      - 'mysqlnd'
+      - 'opcache'
+      - 'openssl'
+      - 'openssl_argon2'
+      - 'option_checking'
+      - 'password_argon2'
+      - 'pcntl'
+      - 'pdo_mysql'
+      - 'pdo_pgsql'
+      - 'pdo_sqlite'
+      - 'pear'
+      - 'pgsql'
+      - 'phpdbg'
+      - 'pic'
+      - 're2c_cgoto'
+      - 'readline'
+      - 'shmop'
+      - 'simple_xml'
+      - 'soap'
+      - 'sockets'
+      - 'sodium'
+      - 'sqlite3'
+      - 'sysvmsg'
+      - 'sysvsem'
+      - 'sysvshm'
+      - 'tidy'
+      - 'webp'
+      - 'xml'
+      - 'xml_reader'
+      - 'xml_writer'
+      - 'xpm'
+      - 'xsl'
+      - 'zend_test'
+      - 'zip'
+      - 'zlib'
+  '8.5':
+    php:
+      version: '8.5.12'
+    debian:
+      - 'bookworm'
+      - 'trixie'
+    extensions:
+      - 'avif'
+      - 'bcmath'
+      - 'bz2'
+      - 'calendar'
+      - 'cgi'
+      - 'cli'
+      - 'curl'
+      - 'dba'
+      - 'dom'
+      - 'exif'
+      - 'fdsetsize'
+      - 'ffi'
+      - 'fpm'
+      - 'freetype'
+      - 'ftp'
+      - 'gd'
+      - 'gettext'
+      - 'gmp'
+      - 'iconv'
+      - 'intl'
+      - 'jpeg'
+      - 'ldap'
+      - 'mbstring'
+      - 'mysqli'
+      - 'mysqlnd'
+      - 'openssl'
+      - 'openssl_argon2'
+      - 'option_checking'
+      - 'password_argon2'
+      - 'pcntl'
+      - 'pdo_mysql'
+      - 'pdo_pgsql'
+      - 'pdo_sqlite'
+      - 'pear'
+      - 'pgsql'
+      - 'phpdbg'
+      - 'pic'
+      - 're2c_cgoto'
+      - 'readline'
+      - 'shmop'
+      - 'simple_xml'
+      - 'soap'
+      - 'sockets'
+      - 'sodium'
+      - 'sqlite3'
+      - 'sysvmsg'
+      - 'sysvsem'
+      - 'sysvshm'
+      - 'tidy'
+      - 'webp'
+      - 'xml'
+      - 'xml_reader'
+      - 'xml_writer'
+      - 'xpm'
+      - 'xsl'
+      - 'zend_test'
+      - 'zip'
+      - 'zlib'

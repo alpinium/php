@@ -1,0 +1,308 @@
+name: Build images
+
+# PR          - build + smoke test (amd64 and arm64), no push
+# push main   - build + push all combinations from configuration.yaml as multi-arch images
+# manual      - rebuild (e.g. to pick up Debian security updates)
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+# Images are pushed to GHCR (GitHub organization) and to Docker Hub (organization alpiniumtech).
+# Docker Hub login uses repository secrets DOCKERHUB_USERNAME and DOCKERHUB_TOKEN.
+env:
+  GHCR_IMAGE: ghcr.io/${{ github.repository }}
+  DOCKERHUB_IMAGE: docker.io/alpiniumtech/${{ github.event.repository.name }}
+  PUSH: ${{ github.event_name != 'pull_request' }}
+
+jobs:
+  matrix:
+    name: Load matrix
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.load.outputs.targets }}
+      include: ${{ steps.load.outputs.include }}
+      platforms: ${{ steps.load.outputs.platforms }}
+      created: ${{ steps.load.outputs.created }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # PHP × Debian combinations from configuration.yaml:
+      #   php_versions.<minor>.php.version  - exact version (X.Y.Z)
+      #   php_versions.<minor>.debian       - list of Debian releases to build on
+      # Each combination is built natively for every platform in PLATFORMS
+      # and the results are then merged into a single multi-arch manifest.
+      - name: Load matrix from configuration.yaml
+        id: load
+        run: |
+          PLATFORMS='[
+            {"platform": "linux/amd64", "arch": "amd64", "runner": "ubuntu-24.04"},
+            {"platform": "linux/arm64", "arch": "arm64", "runner": "ubuntu-24.04-arm"}
+          ]'
+
+          CONFIG=$(yq -o=json configuration.yaml)
+
+          INVALID=$(echo "$CONFIG" | jq -r '
+            .php_versions | to_entries[]
+            | .key as $PHP
+            | (.value.php.version // "" | tostring) as $VERSION
+            | if $VERSION == "" then "\($PHP): missing php.version"
+              elif ($VERSION | test("^" + ($PHP | gsub("\\."; "\\.")) + "\\.[0-9]+$")) | not
+              then "\($PHP): invalid version \"\($VERSION)\""
+              else empty end')
+          if [ -n "$INVALID" ]; then
+            echo "$INVALID"
+            exit 1
+          fi
+
+          TARGETS=$(echo "$CONFIG" | jq -c '[
+            .php_versions | to_entries[]
+            | .key as $PHP
+            | .value.php.version as $VERSION
+            | .value.debian[]
+            | {php: $PHP, version: $VERSION, debian: .}
+          ]')
+
+          if [ "$(echo "$TARGETS" | jq 'length')" -eq 0 ]; then
+            echo "configuration.yaml does not contain any PHP × Debian combination"
+            exit 1
+          fi
+
+          INCLUDE=$(jq -nc --argjson TARGETS "$TARGETS" --argjson PLATFORMS "$PLATFORMS" \
+            '[$TARGETS[] as $T | $PLATFORMS[] | $T + .]')
+
+          {
+            echo "targets=${TARGETS}"
+            echo "include=${INCLUDE}"
+            echo "platforms=$(echo "$PLATFORMS" | jq -c '[.[].platform]')"
+            echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } >> "$GITHUB_OUTPUT"
+          echo "$INCLUDE" | jq -r '.[] | "PHP \(.version) / Debian \(.debian) / \(.arch)"'
+
+  build:
+    name: PHP ${{ matrix.version }} / Debian ${{ matrix.debian }} / ${{ matrix.arch }}
+    needs: matrix
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.include) }}
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Compute image names
+        id: meta
+        run: |
+          GHCR_IMAGE="${GHCR_IMAGE,,}"            # registries require lowercase
+          DOCKERHUB_IMAGE="${DOCKERHUB_IMAGE,,}"
+          echo "IMAGES=${GHCR_IMAGE},${DOCKERHUB_IMAGE}" >> "$GITHUB_OUTPUT"
+
+      - name: Build (${{ matrix.arch }}, for test)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          platforms: ${{ matrix.platform }}
+          tags: test-image
+          build-args: |
+            DEBIAN_CODENAME=${{ matrix.debian }}
+            PHP_VERSION=${{ matrix.version }}
+          cache-from: type=gha,scope=${{ matrix.version }}-${{ matrix.debian }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.version }}-${{ matrix.debian }}-${{ matrix.arch }}
+
+      - name: Smoke test
+        run: |
+          docker run --rm test-image php -v
+          docker run --rm test-image php -r 'exit(PHP_VERSION === "${{ matrix.version }}" ? 0 : 1);'
+          docker run --rm test-image php -m
+          docker run --rm test-image php-fpm -t
+          docker run --rm test-image composer --version
+          docker run --rm test-image grep -q "VERSION_CODENAME=${{ matrix.debian }}" /etc/os-release
+          docker run --rm test-image dpkg --print-architecture | grep -qx "${{ matrix.arch }}"
+
+      # The point release is known only after the base image is pulled,
+      # so it is read from the test image and passed to the push build for labels
+      - name: Detect Debian release
+        id: debian
+        run: |
+          DEBIAN_POINT_RELEASE=$(docker run --rm test-image cat /etc/debian_version)
+          if ! [[ "$DEBIAN_POINT_RELEASE" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "Unexpected /etc/debian_version: \"${DEBIAN_POINT_RELEASE}\""
+            exit 1
+          fi
+          {
+            echo "DEBIAN_RELEASE=${DEBIAN_POINT_RELEASE%%.*}"
+            echo "DEBIAN_POINT_RELEASE=${DEBIAN_POINT_RELEASE}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Login to GHCR
+        if: env.PUSH == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        if: env.PUSH == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # The single-platform image is pushed by digest only (untagged) to both registries,
+      # tags are applied to the multi-arch manifest in the "merge" job
+      - name: Push by digest (${{ matrix.arch }})
+        id: push
+        if: env.PUSH == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,"name=${{ steps.meta.outputs.images }}",push-by-digest=true,name-canonical=true,push=true
+          provenance: mode=max
+          sbom: true
+          # OCI labels are defined in the Dockerfile, CI supplies only the dynamic values
+          build-args: |
+            DEBIAN_CODENAME=${{ matrix.debian }}
+            PHP_VERSION=${{ matrix.version }}
+            VCS_REF=${{ github.sha }}
+            BUILD_DATE=${{ needs.matrix.outputs.created }}
+            SOURCE_URL=${{ github.server_url }}/${{ github.repository }}
+            PHP_MAJOR=${{ matrix.php }}
+            DEBIAN_RELEASE=${{ steps.debian.outputs.debian_release }}
+            DEBIAN_POINT_RELEASE=${{ steps.debian.outputs.debian_point_release }}
+          cache-from: type=gha,scope=${{ matrix.version }}-${{ matrix.debian }}-${{ matrix.arch }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.version }}-${{ matrix.debian }}-${{ matrix.arch }}
+
+      - name: Export digest
+        if: env.PUSH == 'true'
+        run: |
+          DIGEST="${{ steps.push.outputs.digest }}"
+          mkdir -p "${RUNNER_TEMP}/digests"
+          touch "${RUNNER_TEMP}/digests/${DIGEST#sha256:}"
+
+      - name: Upload digest
+        if: env.PUSH == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ matrix.version }}-${{ matrix.debian }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Manifest PHP ${{ matrix.version }} / Debian ${{ matrix.debian }}
+    needs: [matrix, build]
+    # Runs even if some combinations failed - the rest are published,
+    # incomplete ones (missing a platform) fail below
+    if: ${{ !cancelled() && needs.matrix.result == 'success' && github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.matrix.outputs.targets) }}
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ matrix.version }}-${{ matrix.debian }}-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Image tags for commit a1b2c3d (PHP 8.4.27, trixie), in both registries:
+      #   8.4.27-trixie-a1b2c3d   - specific commit
+      #   8.4.27-trixie           - latest build of the given PHP version
+      #   8.4-trixie              - latest PHP patch version
+      - name: Compute image tags
+        id: meta
+        run: |
+          GHCR_IMAGE="${GHCR_IMAGE,,}"            # registries require lowercase
+          DOCKERHUB_IMAGE="${DOCKERHUB_IMAGE,,}"
+          SHA="${GITHUB_SHA::7}"
+          FULL="${{ matrix.version }}-${{ matrix.debian }}"
+          MINOR="${{ matrix.php }}-${{ matrix.debian }}"
+          TAGS=()
+          for IMAGE in "$GHCR_IMAGE" "$DOCKERHUB_IMAGE"; do
+            TAGS+=("${IMAGE}:${FULL}-${SHA}" "${IMAGE}:${FULL}" "${IMAGE}:${MINOR}")
+          done
+          {
+            echo "SOURCE_IMAGE=${GHCR_IMAGE}"
+            echo "TAGS=$(IFS=','; echo "${TAGS[*]}")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create multi-arch manifest
+        id: manifest
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          SOURCE_IMAGE="${{ steps.meta.outputs.source_image }}"
+          EXPECTED=$(echo '${{ needs.matrix.outputs.platforms }}' | jq 'length')
+          FOUND=$(find . -mindepth 1 -maxdepth 1 -type f | wc -l)
+          if [ "$FOUND" -ne "$EXPECTED" ]; then
+            echo "Found ${FOUND} of ${EXPECTED} platforms, manifest will not be created"
+            exit 1
+          fi
+
+          TAG_ARGS=()
+          for TAG in $(echo "${{ steps.meta.outputs.tags }}" | tr ',' ' '); do
+            TAG_ARGS+=(-t "$TAG")
+          done
+
+          SOURCES=()
+          for DIGEST in *; do
+            SOURCES+=("${SOURCE_IMAGE}@sha256:${DIGEST}")
+          done
+
+          docker buildx imagetools create "${TAG_ARGS[@]}" \
+            --annotation "index:org.opencontainers.image.title=php" \
+            --annotation "index:org.opencontainers.image.description=PHP image for Alpinium projects" \
+            --annotation "index:org.opencontainers.image.vendor=Alpinium Tech" \
+            --annotation "index:org.opencontainers.image.licenses=Apache-2.0" \
+            --annotation "index:org.opencontainers.image.url=https://hub.docker.com/r/alpiniumtech/php" \
+            --annotation "index:org.opencontainers.image.version=${{ matrix.version }}-${{ matrix.debian }}" \
+            --annotation "index:org.opencontainers.image.revision=${{ github.sha }}" \
+            --annotation "index:org.opencontainers.image.created=${{ needs.matrix.outputs.created }}" \
+            --annotation "index:org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
+            "${SOURCES[@]}"
+
+          FIRST_TAG="${TAG_ARGS[1]}"
+          docker buildx imagetools inspect "$FIRST_TAG"
+          DIGEST=$(docker buildx imagetools inspect "$FIRST_TAG" --format '{{json .Manifest}}' | jq -r '.digest')
+          echo "DIGEST=${DIGEST}" >> "$GITHUB_OUTPUT"
+
+      - name: Summary
+        run: |
+          # Backticks in sed are Markdown code spans, not command substitution
+          # shellcheck disable=SC2016
+          {
+            echo "### PHP ${{ matrix.version }} / Debian ${{ matrix.debian }}"
+            echo
+            echo "- commit: \`${{ github.sha }}\`"
+            echo "- digest: \`${{ steps.manifest.outputs.digest }}\`"
+            echo "- platforms: \`$(echo '${{ needs.matrix.outputs.platforms }}' | jq -r 'join(", ")')\`"
+            echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | sed 's/.*/- `&`/'
+          } >> "$GITHUB_STEP_SUMMARY"
